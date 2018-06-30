@@ -20,7 +20,7 @@ var mapperInfo;
 
 DO.onLoad(function () {
     initPre();
-    loadDBFromFile('data/data.json', init);
+    loadDBFromFile('https://raw.githubusercontent.com/ratsounds/saomddc/master/data/data.json', init);
 });
 
 function loadDBFromFile(url, callback) {
