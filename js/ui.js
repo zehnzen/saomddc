@@ -550,24 +550,40 @@ function calcRanking() {
                 compArmors.push(undefined);
             }
 
-            var allCombos = [];
+            var bestCombo = null;
             for (var w in compWeapons) {
                 for (var a in compArmors) {
-                    var c = copy(char);
-                    c.eq_atk_wep = compWeapons[w];
-                    c.eq_atk_amr = compArmors[a];
-                    if (clvr.r === 0) {
-                        c.eq_atk_acc = undefined;
+
+                    var accessory = clvr === 0 ? undefined : char.eq_atk_acc;
+                    var dcv = DC.calcDamage(char, clvr.lv, 4, compWeapons[w], clvr.r, compArmors[a], accessory, boss);
+
+                    setDCVValues(dcv);
+
+                    var useNewCombo = false;
+                    if (!bestCombo) {
+                        useNewCombo = true;
+                    } else {
+                        var compareArray = [bestCombo, dcv];
+                        sortArrayWithFilter(compareArray);
+                        if (compareArray[0] !== bestCombo) {
+                            useNewCombo = true;
+                        }
                     }
 
-                    var dcv = DC.calcDamage(c, clvr.lv, 4, c.eq_atk_wep, clvr.r, c.eq_atk_amr, c.eq_atk_acc, boss);
-                    setDCVValues(dcv);
-                    allCombos.push(dcv);
+                    if (useNewCombo) {
+                        var cDcv = copy(dcv);
+
+                        cDcv.sv.c.eq_atk_wep = compWeapons[w];
+                        cDcv.sv.c.eq_atk_amr = compArmors[a];
+                        if (clvr.r === 0) {
+                            cDcv.sv.c.eq_atk_acc = undefined;
+                        }
+                        bestCombo = cDcv;
+                    }
                 }
             }
 
-            sortArrayWithFilter(allCombos);
-            charRanks.push(allCombos[0]);
+            charRanks.push(bestCombo);
         }
 
         ranking = ranking.concat(charRanks);
