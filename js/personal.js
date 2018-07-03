@@ -96,7 +96,7 @@ function getCookies(id) {
     return array;
 }
 function setCookies(id, val) {
-    var i, count, temparray, chunk = 80;
+    var i, count, temparray, chunk = 70;
     for (i = 0, count = 0; i < val.length; i += chunk, count++) {
         temparray = val.slice(i,i+chunk);
         Cookies.set(id + count.toString(), temparray);

@@ -527,60 +527,70 @@ function calcRanking() {
         var charRanks = [];
         for (var i in lvr) {
             var clvr = lvr[i];
-            var emptyWep = false;
 
             if (checkLv && charLv !== clvr.lv) {
                 continue;
             }
 
-            var wepRanks = getWeaponsOfChar(char, clvr);
+            var compWeapons = getWeaponsOfChar(char, clvr);
 
-            if (wepRanks.length <= 0 && useMy.weapons) { // TODO: Make this checking sequence readable
+            if (compWeapons.length <= 0 && useMy.weapons) { // TODO: Make this checking sequence readable
                 if (clvr.r !== 0 || (i - 6) !== charRanks.length || (checkLv && charRanks.length > 0)) {
                     continue;
                 }
-                var wc = copy(char);
-                wc.eq_atk_wep = undefined;
-                wepRanks.push(wc);
-                emptyWep = true;
             }
 
-            var armorRanks = [];
-            for (var j in wepRanks) {
-                var newArmors = getArmorsOfChar(wepRanks[j]);
-                armorRanks = armorRanks.concat(newArmors);
+            if (compWeapons.length <= 0) {
+                compWeapons.push(undefined);
             }
 
-            if (armorRanks.length <= 0) {
-                console.log("armorRanks empty");
-                var ac = copy(char);
-                if (emptyWep) {
-                    ac.eq_atk_wep = undefined;
+            var compArmors = getArmorsOfChar(char);
+
+            if (compArmors.length <= 0) {
+                compArmors.push(undefined);
+            }
+
+            var bestCombo = null;
+            for (var w in compWeapons) {
+                for (var a in compArmors) {
+
+                    var accessory = clvr === 0 ? undefined : char.eq_atk_acc;
+                    var dcv = DC.calcDamage(char, clvr.lv, 4, compWeapons[w], clvr.r, compArmors[a], accessory, boss);
+
+                    setDCVValues(dcv);
+
+                    var useNewCombo = false;
+                    if (!bestCombo) {
+                        useNewCombo = true;
+                    } else {
+                        var compareArray = [bestCombo, dcv];
+                        sortArrayWithFilter(compareArray);
+                        if (compareArray[0] !== bestCombo) {
+                            useNewCombo = true;
+                        }
+                    }
+
+                    if (useNewCombo) {
+                        var cDcv = copy(dcv);
+
+                        cDcv.sv.c.eq_atk_wep = compWeapons[w];
+                        cDcv.sv.c.eq_atk_amr = compArmors[a];
+                        if (clvr.r === 0) {
+                            cDcv.sv.c.eq_atk_acc = undefined;
+                        }
+                        bestCombo = cDcv;
+                    }
                 }
-                ac.eq_atk_amr = undefined;
-                armorRanks.push(ac);
             }
 
-            var allCombos = [];
-            for (var k in armorRanks) {
-                var c = armorRanks[k];
-                if (clvr.r ===0) {
-                    c.eq_atk_acc = undefined;
-                }
-                var dcv = DC.calcDamage(c, clvr.lv, 4, c.eq_atk_wep, clvr.r, c.eq_atk_amr, c.eq_atk_acc, boss);
-                setDCVValues(dcv);
-                allCombos.push(dcv);
-            }
-
-            sortArrayWithFilter(allCombos);
-            charRanks.push(allCombos[0]);
+            charRanks.push(bestCombo);
         }
 
         ranking = ranking.concat(charRanks);
     }
 
     function getWeaponsOfChar(char, clvr) {
-        return getArrayOfChar(char, useMy.weapons, "eq_atk_wep", curWeapons, function (wepId, it) {
+        return getArrayOfEquips(char, useMy.weapons, "eq_atk_wep", curWeapons, function (wepId, it) {
             var weapon = DC.getWeapon(wepId);
             //Check for incompatible weapon type
             if (char.type.eqtype !== weapon.type.id || clvr.r !== curWeapons[it].r) {
@@ -591,7 +601,7 @@ function calcRanking() {
     }
 
     function getArmorsOfChar(char) {
-        return getArrayOfChar(char, useMy.armors, "eq_atk_amr", curArmors, function (armorId) {
+        return getArrayOfEquips(char, useMy.armors, "eq_atk_amr", curArmors, function (armorId) {
             var armor = DC.getArmor(armorId);
             // Check if armor is incompatible
             if (!armor.type.includes(char.cname.gender)) {
@@ -601,11 +611,11 @@ function calcRanking() {
         });
     }
 
-    function getArrayOfChar(char, useObjects, type, myObjects, validation) {
+    function getArrayOfEquips(char, useObjects, type, myObjects, validation) {
         var array = [];
 
         if (!useObjects) {
-            array.push(copy(char));
+            array.push(char[type]);
             return array;
         }
 
@@ -617,10 +627,7 @@ function calcRanking() {
                 continue;
             }
 
-            var c = copy(char);
-            c[type] = equip;
-
-            array.push(c);
+            array.push(equip);
         }
 
         return array;
