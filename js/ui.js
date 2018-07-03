@@ -1,11 +1,11 @@
 
 var lvr = [
-    { lv: 80, r: 4 },
     { lv: 80, r: 5 },
-    { lv: 90, r: 4 },
     { lv: 90, r: 5 },
-    { lv: 100, r: 4 },
     { lv: 100, r: 5 },
+    { lv: 80, r: 4 },
+    { lv: 90, r: 4 },
+    { lv: 100, r: 4 },
     { lv: 80, r: 0 },
     { lv: 90, r: 0 },
     { lv: 100, r: 0 },
@@ -525,6 +525,7 @@ function calcRanking() {
 
     function calcCharDCV(char, checkLv, charLv) {
         var charRanks = [];
+        var highestWepRarity = 0;
         for (var i in lvr) {
             var clvr = lvr[i];
 
@@ -534,11 +535,15 @@ function calcRanking() {
 
             var compWeapons = getWeaponsOfChar(char, clvr);
 
-            if (compWeapons.length <= 0 && useMy.weapons) { // TODO: Make this checking sequence readable
-                if (clvr.r !== 0 || (i - 6) !== charRanks.length || (checkLv && charRanks.length > 0)) {
+            if (useMy.weapons) {
+                if (highestWepRarity > clvr.r) {
+                    continue;
+                }
+                if (compWeapons.length <= 0 && clvr.r !== 0) {
                     continue;
                 }
             }
+            highestWepRarity = clvr.r; //Not using own weapons or is first rarity to show
 
             if (compWeapons.length <= 0) {
                 compWeapons.push(undefined);
