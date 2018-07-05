@@ -1,15 +1,4 @@
 
-var lvr = [
-    { lv: 80, r: 5 },
-    { lv: 90, r: 5 },
-    { lv: 100, r: 5 },
-    { lv: 80, r: 4 },
-    { lv: 90, r: 4 },
-    { lv: 100, r: 4 },
-    { lv: 80, r: 0 },
-    { lv: 90, r: 0 },
-    { lv: 100, r: 0 },
-];
 var ranking;
 var boss;
 var lang;
@@ -515,130 +504,148 @@ function calcRanking() {
         for (var my in curChars) {
             var myUnit = curChars[my];
             var char = DC.getChar(myUnit.id);
-            calcCharDCV(char, true, myUnit.lv);
+            calcCharDCV(char, myUnit.lv);
         }
     } else {
         for (var j in cs) {
-            calcCharDCV(cs[j], false);
+            calcCharDCV(cs[j]);
         }
     }
 
-    function calcCharDCV(char, checkLv, charLv) {
+    function calcCharDCV(char, charLv) {
         var charRanks = [];
-        var highestWepRarity = 0;
-        for (var i in lvr) {
-            var clvr = lvr[i];
+        var useLvs = [80, 90, 100];
 
-            if (checkLv && charLv !== clvr.lv) {
+        if (charLv !== undefined) {
+            useLvs = useLvs.filter(function (lv) {
+                return lv === charLv;
+            });
+        }
+
+        for (var l in useLvs) {
+            var lvRanks = [];
+            var lvl = useLvs[l];
+
+            var useRarities = [4, 5];
+
+            for (var r in useRarities) {
+                var rarity = useRarities[r];
+
+                var compWeapons = getWeapons(char, rarity);
+
+                if (compWeapons[0] === undefined) {
+                    continue;
+                }
+
+                var compArmors = getArmors(char, rarity);
+
+                lvRanks.push(getBestCombo(char, lvl, rarity, compWeapons, compArmors));
+            }
+
+            if (useMy.weapons && lvRanks.length > 0) {
+                sortArrayWithFilter(lvRanks);
+                charRanks.push(lvRanks[0]);
                 continue;
             }
 
-            var compWeapons = getWeaponsOfChar(char, clvr);
+            var compWeapons = getWeapons(char, 0);
+            var compArmors = getArmors(char, 0);
 
-            if (useMy.weapons) {
-                if (highestWepRarity > clvr.r) {
-                    continue;
-                }
-                if (compWeapons.length <= 0 && clvr.r !== 0) {
-                    continue;
-                }
-            }
-            highestWepRarity = clvr.r; //Not using own weapons or is first rarity to show
-
-            if (compWeapons.length <= 0) {
-                compWeapons.push(undefined);
-            }
-
-            var compArmors = getArmorsOfChar(char);
-
-            if (compArmors.length <= 0) {
-                compArmors.push(undefined);
-            }
-
-            var bestCombo = null;
-            for (var w in compWeapons) {
-                for (var a in compArmors) {
-
-                    var accessory = clvr === 0 ? undefined : char.eq_atk_acc;
-                    var dcv = DC.calcDamage(char, clvr.lv, 4, compWeapons[w], clvr.r, compArmors[a], accessory, boss);
-
-                    setDCVValues(dcv);
-
-                    var useNewCombo = false;
-                    if (!bestCombo) {
-                        useNewCombo = true;
-                    } else {
-                        var compareArray = [bestCombo, dcv];
-                        sortArrayWithFilter(compareArray);
-                        if (compareArray[0] !== bestCombo) {
-                            useNewCombo = true;
-                        }
-                    }
-
-                    if (useNewCombo) {
-                        var cDcv = copy(dcv);
-
-                        cDcv.sv.c.eq_atk_wep = compWeapons[w];
-                        cDcv.sv.c.eq_atk_amr = compArmors[a];
-                        if (clvr.r === 0) {
-                            cDcv.sv.c.eq_atk_acc = undefined;
-                        }
-                        bestCombo = cDcv;
-                    }
-                }
-            }
-
-            charRanks.push(bestCombo);
+            lvRanks.push(getBestCombo(char, lvl, 0, compWeapons, compArmors));
+            charRanks = charRanks.concat(lvRanks);
         }
 
         ranking = ranking.concat(charRanks);
     }
 
-    function getWeaponsOfChar(char, clvr) {
-        return getArrayOfEquips(char, useMy.weapons, "eq_atk_wep", curWeapons, function (wepId, it) {
-            var weapon = DC.getWeapon(wepId);
-            //Check for incompatible weapon type
-            if (char.type.eqtype !== weapon.type.id || clvr.r !== curWeapons[it].r) {
-                return null;
-            }
-            return weapon;
-        });
-    }
-
-    function getArmorsOfChar(char) {
-        return getArrayOfEquips(char, useMy.armors, "eq_atk_amr", curArmors, function (armorId) {
-            var armor = DC.getArmor(armorId);
-            // Check if armor is incompatible
-            if (!armor.type.includes(char.cname.gender)) {
-                return null;
-            }
-            return armor;
-        });
-    }
-
-    function getArrayOfEquips(char, useObjects, type, myObjects, validation) {
-        var array = [];
-
-        if (!useObjects) {
-            array.push(char[type]);
-            return array;
-        }
-
-        for (var i in myObjects) {
-
-            var equip = validation(myObjects[i].id, i);
-
-            if (!equip) {
-                continue;
-            }
-
-            array.push(equip);
-        }
-
-        return array;
-    }
-
     sortArrayWithFilter(ranking);
+}
+
+function getBestCombo(char, lvl, rarity, weapons, armors) {
+    var bestCombo = null;
+
+    for (var w in weapons) {
+        for (var a in armors) {
+
+            var accessory = rarity === 0 ? undefined : char.eq_atk_acc;
+            var dcv = DC.calcDamage(char, lvl, 4, weapons[w], rarity, armors[a], accessory, boss);
+
+            setDCVValues(dcv);
+
+            var useNewCombo = false;
+            if (!bestCombo) {
+                useNewCombo = true;
+            } else {
+                var compareArray = [bestCombo, dcv];
+                sortArrayWithFilter(compareArray);
+                if (compareArray[0] !== bestCombo) {
+                    useNewCombo = true;
+                }
+            }
+
+            if (useNewCombo) {
+                var cDcv = copy(dcv);
+
+                cDcv.sv.c.eq_atk_wep = weapons[w];
+                cDcv.sv.c.eq_atk_amr = armors[a];
+                if (rarity === 0) {
+                    cDcv.sv.c.eq_atk_acc = undefined;
+                }
+                bestCombo = cDcv;
+            }
+        }
+    }
+
+    return bestCombo;
+}
+
+function getWeapons(char, rarity) {
+    if (!useMy.weapons) {
+        return (rarity !== 0) ? [char.eq_atk_wep] : [undefined];
+    }
+    // Get own weapons
+    return getArrayOfEquips("eq_atk_wep", curWeapons, function (wepId, it) {
+        var weapon = DC.getWeapon(wepId);
+        //Check for incompatible weapon type
+        if (char.type.eqtype !== weapon.type.id || rarity !== curWeapons[it].r) {
+            return null;
+        }
+        return weapon;
+    });
+}
+function getArmors(char, rarity) {
+    if (!useMy.armors) {
+        return (rarity !== 0) ? [char.eq_atk_amr] : [undefined];
+    }
+    // Get own armors
+    return getArrayOfEquips("eq_atk_amr", curArmors, function (armorId) {
+        var armor = DC.getArmor(armorId);
+        // Check if armor is incompatible
+        if (!armor.type.includes(char.cname.gender)) {
+            return null;
+        }
+        return armor;
+    });
+}
+function getArrayOfEquips(type, myObjects, validation) {
+    var array = [];
+
+    for (var i in myObjects) {
+
+        var equip = validation(myObjects[i].id, i);
+
+        if (!equip) {
+            continue;
+        }
+
+        array.push(equip);
+    }
+
+    if (array.length <= 0) {
+        array.push(undefined);
+    }
+
+    return array;
 }
 
 function setDCVValues(dcv) {
