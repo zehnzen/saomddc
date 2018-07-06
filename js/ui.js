@@ -292,7 +292,6 @@ function initPost() {
     DO.qa('.useMy input').forEach(function (elem) {
         elem.on('change', function (ev) {
             useMy[elem.value] = elem.checked;
-            refreshRanking();
         });
     });
     DO.qa('.saveMy input').forEach(function(elem){
@@ -505,7 +504,7 @@ function calcRanking() {
             var myUnit = curChars[my];
             var char = DC.getChar(myUnit.id);
             if (char === undefined) {
-                alertify.error("charId: " + myUnit.id + " is faulty. Please re-add with proper id");
+                hadFaultyId = true;
                 continue;
             }
             calcCharDCV(char, myUnit.lv);
@@ -611,7 +610,7 @@ function getWeapons(char, rarity) {
     return getArrayOfEquips("eq_atk_wep", curWeapons, function (wepId, it) {
         var weapon = DC.getWeapon(wepId);
         if (weapon === undefined) {
-            alertify.error("weaponId: " + wepId + " is faulty. Please re-add with proper id");
+            hadFaultyId = true;
             return null;
         }
         //Check for incompatible weapon type
@@ -629,7 +628,7 @@ function getArmors(char, rarity) {
     return getArrayOfEquips("eq_atk_amr", curArmors, function (armorId) {
         var armor = DC.getArmor(armorId);
         if (armor === undefined) {
-            alertify.error("armorId: " + armorId + " is faulty. Please re-add with proper id");
+            hadFaultyId = true;
             return null;
         }
         // Check if armor is incompatible
