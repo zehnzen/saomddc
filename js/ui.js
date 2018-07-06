@@ -504,6 +504,10 @@ function calcRanking() {
         for (var my in curChars) {
             var myUnit = curChars[my];
             var char = DC.getChar(myUnit.id);
+            if (char === undefined) {
+                alertify.error("charId: " + myUnit.id + " is faulty. Please re-add with proper id");
+                continue;
+            }
             calcCharDCV(char, myUnit.lv);
         }
     } else {
@@ -606,6 +610,10 @@ function getWeapons(char, rarity) {
     // Get own weapons
     return getArrayOfEquips("eq_atk_wep", curWeapons, function (wepId, it) {
         var weapon = DC.getWeapon(wepId);
+        if (weapon === undefined) {
+            alertify.error("weaponId: " + wepId + " is faulty. Please re-add with proper id");
+            return null;
+        }
         //Check for incompatible weapon type
         if (char.type.eqtype !== weapon.type.id || rarity !== curWeapons[it].r) {
             return null;
@@ -620,6 +628,10 @@ function getArmors(char, rarity) {
     // Get own armors
     return getArrayOfEquips("eq_atk_amr", curArmors, function (armorId) {
         var armor = DC.getArmor(armorId);
+        if (armor === undefined) {
+            alertify.error("armorId: " + armorId + " is faulty. Please re-add with proper id");
+            return null;
+        }
         // Check if armor is incompatible
         if (!armor.type.includes(char.cname.gender)) {
             return null;
