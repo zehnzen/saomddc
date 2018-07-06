@@ -153,11 +153,41 @@ function resetArmors() {
     curArmors = saveMy.armors;
 }
 
+// MARK: OldImport Error handling
+
+var hadFaultyId = false;
+
+function showFaultyIdsIfNeeded() {
+    if (!hadFaultyId) {
+        return;
+    }
+
+    var lastPart = " is faulty. Please re-add with proper id";
+    for (var c in curChars) {
+        if (!DC.getChar(curChars[c].id)) {
+            alertify.error("charId: " + curChars[c].id + lastPart);
+        }
+    }
+    for (var w in curWeapons) {
+        if (!DC.getWeapon(curWeapons[w].id)) {
+            alertify.error("weaponId: " + curWeapons[w].id + lastPart);
+        }
+    }
+    for (var a in curArmors) {
+        if (!DC.getArmor(curArmors[a].id)) {
+            alertify.error("armorId: " + curArmors[a].id + lastPart);
+        }
+    }
+
+    hadFaultyId = false;
+}
+
 // MARK: Convenience functions
 
 function refreshRanking() {
     calcRanking();
     showRanking();
+    showFaultyIdsIfNeeded();
 }
 
 // MARK: Console functions
