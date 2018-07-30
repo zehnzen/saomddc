@@ -556,7 +556,6 @@ function calcRanking() {
 
             lvRanks.push(getBestCombo(char, lvl, 0, compWeapons, compArmors));
             charRanks = charRanks.concat(lvRanks);
-            ranking.push(dcv);
         }
 
         ranking = ranking.concat(charRanks);
