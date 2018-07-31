@@ -278,6 +278,10 @@ function initPost() {
     //load default
     getBoss();
     refreshRanking();
+    // init useMy state
+    DO.qa('.useMy input').forEach(function (elem) {
+        useMy[elem.value] = elem.checked;
+    });
     //init events
     DO.qa('.boss input,.boss select').forEach(function (elem) {
         elem.on('change', function (ev) {
