@@ -682,6 +682,7 @@ function setDCVValues(dcv) {
     dcv.capacity = Math.floor(dcv.damage * dcv.sv.mp / dcv.sv.cost);
     dcv.damage = Math.floor(dcv.damage);
     dcv.mpr = Math.floor(dcv.sv.mpr);
+    dcv.hits = dcv.sv.c.hits;
 
     // Personal values
     dcv.c2dpm = Math.floor(getC2DPM(dcv));
