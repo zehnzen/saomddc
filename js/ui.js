@@ -716,7 +716,7 @@ function getC2DPM(dcv) {
     var ns_duration = dcv.sv.c.type.ns_duration * dcv.combo_speed_rate * (dcv.sv.c.s3_speed ? dcv.sv.c.s3_speed : 1);
     while (time <= 60) {
         if (mp >= dcv.sv.cost) { // s3
-            time += dcv.c2duration;
+            time += ((dcv.c2duration + dcv.duration) / 2);
             mp -= dcv.sv.cost;
             count++;
         } else { // normal set
