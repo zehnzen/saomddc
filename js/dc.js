@@ -60,7 +60,7 @@ DC = (function () {
         }
     }
     function evalConditions(conditions, data) {
-        values = {};
+        var values = {};
         for (var i in conditions) {
             var condition = conditions[i];
             if (Expression.eval(condition.expression, data)) {
