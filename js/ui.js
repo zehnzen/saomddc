@@ -329,7 +329,7 @@ function initPost() {
         // useMy changes
         if (ev.which == 68) { //D press
             if (!useMy.chars) {
-                alertify.alert("Not in myChar filter");
+                alertify.message("Not in myChar filter");
                 return;
             }
             removeCurWepForRankId(lastClicked);
