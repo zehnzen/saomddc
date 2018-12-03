@@ -204,7 +204,10 @@ function initPre() {
         showSidebar();
         store.set('config', config);
     });
-    window.matchMedia('only screen and (orientation:landscape)').addListener(showSidebar);
+    window.addEventListener('resize', function (ev) {
+        console.log('resize');
+        showSidebar();
+    });
     mapperInfo = new Mapper(DO.qid('item_info').innerHTML);
 }
 
@@ -317,7 +320,7 @@ function initPost() {
         var elemDetail = this.q('.detail');
         if (elemDetail.innerHTML.trim() === '') {
             elemDetail.html(getCharDetail(this.id));
-            twttr.widgets.load(elemDetail);
+            createTweetWidgets(elemDetail);
         }
         if (!ev.target.parents('.tcontainer')) {
             lastClicked = this.id;
@@ -672,19 +675,19 @@ function setDCVValues(dcv) {
     dcv.combo_speed_rate = getComboSpeedRate(dcv.sv.c.combo_speed, boss.combo);
     dcv.acceleration_rate = 1.0;
     dcv.acceleration_offset = 0.0;
-    if(dcv.sv.c.rarity === 6){
-        if(boss.ingame){
+    if (dcv.sv.c.rarity === 6) {
+        if (boss.ingame) {
             dcv.acceleration_rate = 3.0;
         } else {
             dcv.acceleration_offset = 1.0;
         }
     }
-    var dca_x = getDCA(dcv.sv.c.s3_duration, dcv.sv.c.s3_c_duration, dcv.sv.c.s3_acceleration, dcv.combo_speed_rate, dcv.acceleration_rate,dcv.acceleration_offset);
+    var dca_x = getDCA(dcv.sv.c.s3_duration, dcv.sv.c.s3_c_duration, dcv.sv.c.s3_acceleration, dcv.combo_speed_rate, dcv.acceleration_rate, dcv.acceleration_offset);
     dcv.duration = dca_x.duration;
     dcv.cduration = dca_x.combination;
     dcv.acceleration = dca_x.acceleration;
     dcv.c2duration = dcv.duration + (dcv.sv.c.s3_c_duration ? dcv.cduration : dcv.duration);
-    var dca_50 = getDCA(dcv.sv.c.s3_duration, dcv.sv.c.s3_c_duration, dcv.sv.c.s3_acceleration, getComboSpeedRate(dcv.sv.c.combo_speed, 50), dcv.acceleration_rate,dcv.acceleration_offset);
+    var dca_50 = getDCA(dcv.sv.c.s3_duration, dcv.sv.c.s3_c_duration, dcv.sv.c.s3_acceleration, getComboSpeedRate(dcv.sv.c.combo_speed, 50), dcv.acceleration_rate, dcv.acceleration_offset);
     dcv.duration_50 = dca_50.duration;
     dcv.cduration_50 = dca_50.combination;
     dcv.acceleration_50 = dca_50.acceleration;
@@ -701,6 +704,7 @@ function setDCVValues(dcv) {
     dcv.damage = Math.floor(dcv.damage);
     dcv.mpr = Math.floor(dcv.sv.mpr);
     dcv.hits = dcv.sv.c.hits;
+    dcv.rate = Math.floor(dcv.rate * 100) / 100
 
     // Personal values
     dcv.c2dpm = Math.floor(getC2DPM(dcv));
@@ -890,9 +894,18 @@ function getCharDetail(id) {
     html += getKVTableRow('MP Limit Break', c.mp_lb_total + '(' + c.mp_lb_1 + ',' + c.mp_lb_2 + ',' + c.mp_lb_3 + ',' + c.mp_lb_4 + ') EXPERIMENTAL!');
     html += '</tbody></table>'
     if (c.s3_video) {
-        html += '<div class="tcontainer"><blockquote class="twitter-tweet"><a href="' + c.s3_video + '"></a></blockquote><div>';
+        html += '<div class="tcontainer hidden"><a class="hidden" href="' + c.s3_video + '"></a><div>';
     }
     return html;
+}
+function createTweetWidgets(detail) {
+    var container = detail.q('.tcontainer');
+    if (container) {
+        var id = container.q('a').href.split('/status/')[1];
+        twttr.widgets.createTweet(id, container, { width: '100%' }).then(() =>
+            container.classList.toggle('hidden')
+        );
+    }
 }
 function getKVTableRow(key, value, float) {
     var v = value;
