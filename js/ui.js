@@ -672,16 +672,6 @@ function getArrayOfEquips(type, myObjects, validation) {
 
 function setDCVValues(dcv) {
     // setList from Ratsounds
-    dcv.combo_speed_rate = getComboSpeedRate(dcv.sv.c.combo_speed, boss.combo);
-    dcv.acceleration_rate = 1.0;
-    dcv.acceleration_offset = 0.0;
-    if (dcv.sv.c.rarity === 6) {
-        if (boss.ingame) {
-            dcv.acceleration_rate = 3.0;
-        } else {
-            dcv.acceleration_offset = 1.0;
-        }
-    }
     var dca_x = getDCA(dcv.sv.c.s3_duration, dcv.sv.c.s3_c_duration, dcv.sv.c.s3_acceleration, dcv.combo_speed_rate, dcv.acceleration_rate, dcv.acceleration_offset);
     dcv.duration = dca_x.duration;
     dcv.cduration = dca_x.combination;
@@ -702,9 +692,10 @@ function setDCVValues(dcv) {
     dcv.gap = Math.floor((dcv.duration - dcv.cduration) * 100) / 100;
     dcv.capacity = Math.floor(dcv.damage * dcv.sv.mp / dcv.sv.cost);
     dcv.damage = Math.floor(dcv.damage);
+    dcv.mp = dcv.sv.mp;
     dcv.mpr = Math.floor(dcv.sv.mpr);
     dcv.hits = dcv.sv.c.hits;
-    dcv.rate = Math.floor(dcv.rate * 100) / 100
+    dcv.rate = Math.floor(dcv.rate * 100) / 100;
 
     // Personal values
     dcv.c2dpm = Math.floor(getC2DPM(dcv));
