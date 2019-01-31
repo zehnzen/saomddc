@@ -672,6 +672,16 @@ function getArrayOfEquips(type, myObjects, validation) {
 
 function setDCVValues(dcv) {
     // setList from Ratsounds
+    dcv.combo_speed_rate = getComboSpeedRate(dcv.sv.c.combo_speed, boss.combo);
+    dcv.acceleration_rate = 1.0;
+    dcv.acceleration_offset = 0.0;
+    if (dcv.sv.c.rarity === 6) {
+        if (boss.ingame) {
+            dcv.acceleration_rate = 3.0;
+        } else {
+            dcv.acceleration_offset = 1.0;
+        }
+    }
     var dca_x = getDCA(dcv.sv.c.s3_duration, dcv.sv.c.s3_c_duration, dcv.sv.c.s3_acceleration, dcv.combo_speed_rate, dcv.acceleration_rate, dcv.acceleration_offset);
     dcv.duration = dca_x.duration;
     dcv.cduration = dca_x.combination;
